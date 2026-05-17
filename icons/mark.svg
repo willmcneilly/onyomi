@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <path d="M 64 0 L 64 0 A 64 64 0 0 1 128 64 L 128 64 A 64 64 0 0 1 64 128 L 17 128 A 17 17 0 0 1 0 111 L 0 64 A 64 64 0 0 1 64 0 Z" fill="#e3a72e"/>
+  <text x="64" y="64" text-anchor="middle" dominant-baseline="central" font-family="Hiragino Maru Gothic ProN" font-size="70" font-weight="600" fill="#19150f">音</text>
+</svg>

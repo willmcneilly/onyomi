@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Onyomi — Cache</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fff;
+        --fg: #111;
+        --muted: #666;
+        --border: #d0d0d0;
+        --accent: #2a6df4;
+        --row-hover: #f6f8fa;
+        --err: #cf222e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1a1a1a;
+          --fg: #eee;
+          --muted: #999;
+          --border: #333;
+          --row-hover: #232323;
+          --err: #f85149;
+        }
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font: 14px/1.4 -apple-system, system-ui, sans-serif;
+        max-width: 900px;
+        margin: 24px auto;
+        padding: 0 20px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      .subtitle {
+        color: var(--muted);
+        margin: 0 0 20px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      #search {
+        flex: 1;
+        padding: 8px 10px;
+        font: inherit;
+        color: inherit;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+      }
+      button {
+        font: inherit;
+        padding: 6px 12px;
+        background: var(--accent);
+        color: white;
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--border);
+      }
+      button.danger {
+        background: transparent;
+        color: var(--err);
+        border: 1px solid var(--border);
+      }
+      button.icon {
+        background: transparent;
+        color: var(--fg);
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+      }
+      #summary {
+        color: var(--muted);
+        margin-bottom: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      tr:hover td {
+        background: var(--row-hover);
+      }
+      td.text {
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 15px;
+      }
+      td.actions {
+        white-space: nowrap;
+        width: 1%;
+      }
+      td.actions button + button {
+        margin-left: 4px;
+      }
+      #empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 48px 0;
+      }
+      a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Cache</h1>
+    <p class="subtitle">
+      Audio you've already played, stored locally. <a id="optionsLink" href="#">Back to options</a>
+    </p>
+
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Filter by text…" />
+      <button class="danger" id="clearAll" type="button">Clear all</button>
+    </div>
+
+    <div id="summary">Loading…</div>
+
+    <table id="table" style="display: none">
+      <thead>
+        <tr>
+          <th>Text</th>
+          <th>Voice</th>
+          <th>Added</th>
+          <th>Size</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div id="empty" style="display: none">No cached audio yet. Play something to start caching.</div>
+
+    <script type="module" src="cache.js"></script>
+  </body>
+</html>

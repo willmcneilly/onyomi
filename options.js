@@ -106,7 +106,22 @@ function renderVoices(voices, defaultVoiceId) {
     .join("");
 }
 
+let currentPreview = null;
+
+function stopCurrentPreview() {
+  if (!currentPreview) return;
+  const { el, url } = currentPreview;
+  el.onended = null;
+  el.onerror = null;
+  try {
+    el.pause();
+  } catch (_) {}
+  URL.revokeObjectURL(url);
+  currentPreview = null;
+}
+
 async function previewVoice(voiceId) {
+  stopCurrentPreview();
   const response = await chrome.runtime.sendMessage({
     type: "speak",
     text: "こんにちは",
@@ -120,8 +135,19 @@ async function previewVoice(voiceId) {
   const blob = new Blob([bytes], { type: "audio/mpeg" });
   const url = URL.createObjectURL(blob);
   const el = new Audio(url);
-  el.onended = () => URL.revokeObjectURL(url);
-  el.play().catch((e) => console.error("Onyomi preview play failed:", e));
+  currentPreview = { el, url };
+  el.onended = () => {
+    if (currentPreview?.el !== el) return;
+    URL.revokeObjectURL(url);
+    currentPreview = null;
+  };
+  el.play().catch((e) => {
+    if (currentPreview?.el === el) {
+      URL.revokeObjectURL(url);
+      currentPreview = null;
+    }
+    console.error("Onyomi preview play failed:", e);
+  });
 }
 
 async function testConnection() {

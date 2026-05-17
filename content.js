@@ -197,6 +197,18 @@ function openOptions() {
   chrome.runtime.sendMessage({ type: "open-options" });
 }
 
+function stopCurrentAudio() {
+  if (!currentAudio) return;
+  const { el, url } = currentAudio;
+  el.onended = null;
+  el.onerror = null;
+  try {
+    el.pause();
+  } catch (_) {}
+  URL.revokeObjectURL(url);
+  currentAudio = null;
+}
+
 async function playCurrent({ random } = {}) {
   if (!currentText) return;
 
@@ -217,11 +229,7 @@ async function playCurrent({ random } = {}) {
   }
   clearConfirmation();
 
-  // Stop any in-flight playback before kicking off a new one.
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
+  stopCurrentAudio();
   isPlaying = false;
 
   isLoading = true;
@@ -301,38 +309,40 @@ function playAudio(audio, voiceId) {
     showToast({ title: "Couldn't play audio", text: "Empty response from server." });
     return;
   }
+  stopCurrentAudio();
   const blob = new Blob([bytes], { type: "audio/mpeg" });
   const url = URL.createObjectURL(blob);
   const el = new Audio(url);
-  currentAudio = el;
+  currentAudio = { el, url };
   setVoiceLabel(voiceId || "");
   el.onended = () => {
+    if (currentAudio?.el !== el) return;
     URL.revokeObjectURL(url);
-    if (currentAudio === el) {
-      currentAudio = null;
-      isPlaying = false;
-      applyState();
-      if (!getSelectionInfo()) hidePill();
-    }
+    currentAudio = null;
+    isPlaying = false;
+    applyState();
+    if (!getSelectionInfo()) hidePill();
   };
   el.onerror = () => {
-    URL.revokeObjectURL(url);
-    if (currentAudio === el) {
+    if (currentAudio?.el === el) {
+      URL.revokeObjectURL(url);
       currentAudio = null;
-      isPlaying = false;
-      applyState();
     }
+    isPlaying = false;
+    applyState();
     showToast({ title: "Couldn't play returned audio", text: "" });
   };
   el.play()
     .then(() => {
-      if (currentAudio !== el) return;
+      if (currentAudio?.el !== el) return;
       isPlaying = true;
       applyState();
     })
     .catch(() => {
-      URL.revokeObjectURL(url);
-      if (currentAudio === el) currentAudio = null;
+      if (currentAudio?.el === el) {
+        URL.revokeObjectURL(url);
+        currentAudio = null;
+      }
       isPlaying = false;
       applyState();
       showToast({ title: "Couldn't play returned audio", text: "" });

@@ -8,6 +8,19 @@ let allEntries = [];
 let voiceMap = {};
 let currentView = "phrase";
 let searchTerm = "";
+let currentAudio = null;
+
+function stopCurrentAudio() {
+  if (!currentAudio) return;
+  const { el, url } = currentAudio;
+  el.onended = null;
+  el.onerror = null;
+  try {
+    el.pause();
+  } catch (_) {}
+  URL.revokeObjectURL(url);
+  currentAudio = null;
+}
 
 function escapeHtml(s) {
   return String(s)
@@ -185,13 +198,30 @@ async function load() {
 }
 
 async function playEntry(key) {
+  stopCurrentAudio();
   const entry = await cache.get(key);
   if (!entry) return;
   const url = URL.createObjectURL(entry.blob);
-  const audio = new Audio(url);
-  audio.onended = () => URL.revokeObjectURL(url);
-  audio.onerror = () => URL.revokeObjectURL(url);
-  audio.play().catch((e) => console.error("Onyomi cache: play rejected", e));
+  const el = new Audio(url);
+  currentAudio = { el, url };
+  el.onended = () => {
+    if (currentAudio?.el !== el) return;
+    URL.revokeObjectURL(url);
+    currentAudio = null;
+  };
+  el.onerror = () => {
+    if (currentAudio?.el === el) {
+      URL.revokeObjectURL(url);
+      currentAudio = null;
+    }
+  };
+  el.play().catch((e) => {
+    if (currentAudio?.el === el) {
+      URL.revokeObjectURL(url);
+      currentAudio = null;
+    }
+    console.error("Onyomi cache: play rejected", e);
+  });
 }
 
 async function deleteEntry(key) {

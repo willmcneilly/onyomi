@@ -83,7 +83,7 @@ async function speak({ text, voice, random }) {
 
   const hit = await cache.get(key);
   if (hit) {
-    return hit.blob.arrayBuffer();
+    return { audio: await hit.blob.arrayBuffer(), voice: voiceId };
   }
 
   const audio = await speakWithRetry({
@@ -104,7 +104,7 @@ async function speak({ text, voice, random }) {
     createdAt: Date.now(),
   });
 
-  return audio;
+  return { audio, voice: voiceId };
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -116,13 +116,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type !== "speak") return false;
 
   speak(msg).then(
-    (audio) =>
+    ({ audio, voice }) =>
       sendResponse({
         ok: true,
         // chrome.runtime.sendMessage serialization can drop ArrayBuffer across
         // SW ↔ content-script boundaries; send as a JSON-safe byte array.
         audio: Array.from(new Uint8Array(audio)),
         provider: adapter.providerId,
+        voice,
       }),
     (err) => {
       console.error("Onyomi speak failed:", err);

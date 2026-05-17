@@ -1,143 +1,288 @@
-.onyomi-toolbar {
+/* Onyomi — content script UI.
+   Pill + toast live over arbitrary host pages; styles must be aggressively
+   isolated (all: initial, then explicit). Dark+gold palette inlined here
+   because tokens.css doesn't load in content-script contexts. */
+
+.onyomi-pill,
+.onyomi-toast {
+  --ox-bg-2: #1c1813;
+  --ox-rule: #2c271f;
+  --ox-text: #ece5d3;
+  --ox-text-2: #bdb29a;
+  --ox-mute: #7c7464;
+  --ox-gold: #e3a72e;
+  --ox-warn: #d97b3a;
+  --ox-ink: #14110d;
+}
+
+.onyomi-pill {
   all: initial;
   position: fixed;
   z-index: 2147483647;
-  display: flex;
-  gap: 4px;
-  font: 14px/1 -apple-system, system-ui, sans-serif;
-}
-
-.onyomi-warning {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  right: 0;
-  background: #d97706;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  display: none;
-}
-
-.onyomi-toolbar.onyomi-confirm .onyomi-warning {
-  display: block;
-}
-
-.onyomi-toolbar.onyomi-confirm .onyomi-btn {
-  background: #d97706;
-}
-
-.onyomi-toolbar.onyomi-confirm .onyomi-btn:hover {
-  background: #b45309;
-}
-
-.onyomi-toolbar button.onyomi-btn {
-  all: initial;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #2a6df4;
-  color: white;
-  cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  gap: 2px;
+  padding: 4px;
+  background: var(--ox-bg-2);
+  border: 1px solid var(--ox-rule);
+  border-radius: 999px;
+  box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.55);
+  color: var(--ox-text);
+  font: 500 12.5px/1.3 "Geist", "Inter Tight", system-ui, sans-serif;
+  cursor: default;
   user-select: none;
   -webkit-user-select: none;
-  font: 14px/1 -apple-system, system-ui, sans-serif;
 }
 
-.onyomi-toolbar button.onyomi-btn:hover {
-  background: #1a55c5;
+.onyomi-pill button {
+  all: initial;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
 }
 
-.onyomi-toolbar button.onyomi-btn:disabled {
+.onyomi-pill .onyomi-play,
+.onyomi-pill .onyomi-shuffle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.onyomi-pill .onyomi-play {
+  background: var(--ox-gold);
+  color: var(--ox-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.onyomi-pill .onyomi-play:hover {
+  filter: brightness(1.08);
+}
+.onyomi-pill .onyomi-shuffle {
+  background: transparent;
+  color: var(--ox-text-2);
+}
+.onyomi-pill .onyomi-shuffle:hover {
+  color: var(--ox-text);
+}
+.onyomi-pill button:disabled {
   cursor: default;
   opacity: 0.6;
 }
 
-.onyomi-toolbar .onyomi-icon {
+.onyomi-pill svg {
   display: block;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 6px 0 6px 10px;
-  border-color: transparent transparent transparent white;
-  margin-left: 2px;
+  pointer-events: none;
 }
 
-.onyomi-toolbar button.onyomi-play.onyomi-loading .onyomi-icon {
+/* Loading state: spinner replaces play icon */
+.onyomi-pill .onyomi-play .onyomi-icon-spinner {
+  display: none;
   width: 14px;
   height: 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  margin-left: 0;
-  animation: onyomi-spin 0.7s linear infinite;
 }
-
-.onyomi-toolbar button.onyomi-random {
-  font-size: 14px;
+.onyomi-pill .onyomi-play .onyomi-icon-play {
+  display: block;
+  width: 12px;
+  height: 12px;
 }
-
-@keyframes onyomi-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.onyomi-toolbar.onyomi-no-key .onyomi-btn {
-  background: #d97706;
-}
-.onyomi-toolbar.onyomi-no-key .onyomi-btn:hover {
-  background: #b45309;
-}
-.onyomi-toolbar.onyomi-no-key .onyomi-random {
+.onyomi-pill.onyomi-loading .onyomi-play .onyomi-icon-play {
   display: none;
 }
-.onyomi-warn-icon {
+.onyomi-pill.onyomi-loading .onyomi-play .onyomi-icon-spinner {
   display: block;
-  color: white;
-  font-size: 16px;
-  line-height: 1;
+  animation: oy-spin 0.9s linear infinite;
 }
 
+/* Now-playing: waveform + voice label appended */
+.onyomi-now-playing {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 6px;
+}
+.onyomi-pill.onyomi-playing .onyomi-now-playing {
+  display: inline-flex;
+}
+.onyomi-waveform {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.onyomi-waveform span {
+  display: block;
+  width: 2px;
+  background: var(--ox-gold);
+  border-radius: 1px;
+  animation: oy-pulse 1s ease-in-out infinite;
+}
+.onyomi-waveform span:nth-child(1) { height: 3px;  animation-delay: 0.00s; }
+.onyomi-waveform span:nth-child(2) { height: 7px;  animation-delay: 0.10s; }
+.onyomi-waveform span:nth-child(3) { height: 5px;  animation-delay: 0.20s; }
+.onyomi-waveform span:nth-child(4) { height: 9px;  animation-delay: 0.30s; }
+.onyomi-waveform span:nth-child(5) { height: 4px;  animation-delay: 0.40s; }
+.onyomi-voice-label {
+  font: 500 12px/1 "Geist", "Inter Tight", system-ui, sans-serif;
+  color: var(--ox-text-2);
+  white-space: nowrap;
+}
+.onyomi-voice-label .jp {
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui;
+  margin-left: 4px;
+}
+
+/* Confirm-pill: replaces normal pill content while armed */
+.onyomi-confirm-content {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 0 14px;
+}
+.onyomi-pill.onyomi-confirm .onyomi-play,
+.onyomi-pill.onyomi-confirm .onyomi-shuffle,
+.onyomi-pill.onyomi-confirm .onyomi-now-playing {
+  display: none;
+}
+.onyomi-pill.onyomi-confirm .onyomi-confirm-content {
+  display: inline-flex;
+}
+.onyomi-confirm-text b {
+  color: var(--ox-gold);
+  font-weight: 600;
+}
+.onyomi-confirm-btn {
+  background: var(--ox-gold) !important;
+  color: var(--ox-ink) !important;
+  border-radius: 999px !important;
+  padding: 6px 14px !important;
+  font: 600 12.5px/1 "Geist", "Inter Tight", system-ui, sans-serif !important;
+  width: auto !important;
+  height: auto !important;
+}
+.onyomi-confirm-btn:hover {
+  filter: brightness(1.08);
+}
+
+/* No-key warning pill — .onyomi-pill prefix is needed to outweigh
+   the (0,1,1) `.onyomi-pill button { display: grid }` rule. */
+.onyomi-pill .onyomi-no-key-content {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px 3px 10px;
+  color: var(--ox-warn);
+  font: 500 12.5px/1 "Geist", "Inter Tight", system-ui, sans-serif;
+  cursor: pointer;
+}
+.onyomi-no-key-content svg {
+  flex: 0 0 auto;
+}
+.onyomi-pill.onyomi-no-key {
+  border-color: rgba(217, 123, 58, 0.4);
+  padding: 0;
+}
+.onyomi-pill.onyomi-no-key .onyomi-play,
+.onyomi-pill.onyomi-no-key .onyomi-shuffle,
+.onyomi-pill.onyomi-no-key .onyomi-now-playing,
+.onyomi-pill.onyomi-no-key .onyomi-confirm-content {
+  display: none;
+}
+.onyomi-pill.onyomi-no-key .onyomi-no-key-content {
+  display: inline-flex;
+}
+
+/* ─── Toast ─── */
 .onyomi-toast {
   all: initial;
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 2147483647;
-  background: #1f2937;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 6px;
-  max-width: 360px;
-  font: 13px/1.4 -apple-system, system-ui, sans-serif;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 380px;
+  padding: 14px 16px;
+  background: var(--ox-bg-2);
+  border: 1px solid var(--ox-rule);
+  border-radius: 10px;
+  box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.65);
+  color: var(--ox-text);
+  font: 13.5px/1.45 "Geist", "Inter Tight", system-ui, sans-serif;
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.18s, transform 0.18s;
-  pointer-events: none;
-  cursor: default;
-}
-.onyomi-toast.onyomi-toast-show {
-  opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
 }
-.onyomi-toast.onyomi-toast-error {
-  background: #991b1b;
+.onyomi-toast.onyomi-toast-show {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
 }
-.onyomi-toast .onyomi-toast-action {
+.onyomi-toast-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(217, 123, 58, 0.14);
+  color: var(--ox-warn);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.onyomi-toast-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+.onyomi-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+.onyomi-toast-title {
+  font-weight: 600;
+}
+.onyomi-toast-text {
+  color: var(--ox-text-2);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+.onyomi-toast-action {
   all: initial;
   display: inline-block;
-  margin-left: 8px;
-  color: white;
-  text-decoration: underline;
+  margin-top: 6px;
+  color: var(--ox-gold);
+  font: 500 12.5px/1.4 "Geist", "Inter Tight", system-ui, sans-serif;
   cursor: pointer;
-  font: inherit;
+  text-decoration: none;
+}
+.onyomi-toast-action:hover {
+  text-decoration: underline;
+}
+.onyomi-toast-close {
+  all: initial;
+  background: none;
+  color: var(--ox-mute);
+  cursor: pointer;
+  padding: 2px;
+  flex: 0 0 auto;
+}
+.onyomi-toast-close:hover {
+  color: var(--ox-text-2);
+}
+.onyomi-toast-close svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+@keyframes oy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes oy-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
 }

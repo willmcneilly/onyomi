@@ -5,67 +5,143 @@
     <title>Onyomi — Options</title>
     <link rel="stylesheet" href="tokens.css" />
     <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #fff;
-        --fg: #111;
-        --muted: #666;
-        --border: #d0d0d0;
-        --accent: #2a6df4;
-        --ok: #1a7f37;
-        --err: #cf222e;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #1a1a1a;
-          --fg: #eee;
-          --muted: #999;
-          --border: #333;
-          --ok: #3fb950;
-          --err: #f85149;
-        }
-      }
+      html,
       body {
-        background: var(--bg);
-        color: var(--fg);
-        font: 14px/1.4 -apple-system, system-ui, sans-serif;
-        max-width: 560px;
-        margin: 32px auto;
-        padding: 0 20px;
+        margin: 0;
+        background: var(--ox-w-bg);
+        color: var(--ox-w-text);
+        font: 14px/1.55 var(--ox-font);
       }
-      h1 {
-        margin: 0 0 4px;
-        font-size: 22px;
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 36px 48px 56px;
+      }
+      a {
+        color: var(--ox-w-gold);
+      }
+      code {
+        font: 11.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: var(--ox-w-bg-2);
+        padding: 1px 6px;
+        border-radius: 4px;
+        color: var(--ox-w-text-2);
+        border: 1px solid var(--ox-w-rule);
+      }
+
+      /* ─── Mark (nested-square variant for app surfaces) ─── */
+      .ox-mark {
+        width: 44px;
+        height: 44px;
+        background: var(--ox-w-ink);
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        flex: 0 0 auto;
+      }
+      .ox-mark-inner {
+        width: 30px;
+        height: 30px;
+        background: var(--ox-w-gold-bg);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: var(--ox-w-ink);
+        font: 600 22px/1 var(--ox-font-jp);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      }
+
+      /* ─── Header ─── */
+      header.page {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--ox-w-rule);
+      }
+      .title {
+        flex: 1;
+      }
+      .title h1 {
+        margin: 0;
+        font: 600 24px/1 var(--ox-font);
+        letter-spacing: -0.02em;
+      }
+      .title .tagline {
+        margin-top: 4px;
+        font-size: 12.5px;
+        color: var(--ox-w-text-2);
+      }
+      .title .tagline .jp {
+        font-family: var(--ox-font-jp);
+      }
+      .cache-link {
+        padding: 7px 14px;
+        border-radius: 999px;
+        color: var(--ox-w-gold);
+        background: var(--ox-w-gold-hl);
+        font-size: 12.5px;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid var(--ox-w-rule);
+      }
+      .cache-link:hover {
+        background: rgba(160, 107, 20, 0.13);
+      }
+
+      /* ─── Sections ─── */
+      section.section {
+        margin-top: 30px;
+      }
+      section.section h2 {
+        margin: 0;
+        font: 600 16px/1.3 var(--ox-font);
+        letter-spacing: -0.005em;
       }
       .subtitle {
-        color: var(--muted);
-        margin: 0 0 24px;
+        font-size: 12.5px;
+        color: var(--ox-w-text-2);
+        margin-top: 4px;
+        margin-bottom: 18px;
       }
-      .field {
-        margin-bottom: 20px;
+      .fields {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
-      label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 4px;
+      .field-label {
+        font: 500 11.5px/1.3 var(--ox-font);
+        color: var(--ox-w-text-2);
+        margin-bottom: 6px;
+        letter-spacing: 0.01em;
       }
       .hint {
-        color: var(--muted);
-        font-size: 12px;
-        margin-top: 4px;
+        font-size: 11.5px;
+        color: var(--ox-w-mute);
+        margin-top: 6px;
+        line-height: 1.5;
       }
+
+      /* ─── Inputs ─── */
       input[type="text"],
       input[type="password"],
-      input[type="number"],
-      select {
+      input[type="number"] {
         width: 100%;
-        padding: 8px 10px;
-        font: inherit;
-        color: inherit;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 4px;
+        padding: 10px 14px;
+        background: var(--ox-w-bg);
+        border: 1px solid var(--ox-w-rule);
+        border-radius: 8px;
+        font: 14px/1.4 var(--ox-font);
+        color: var(--ox-w-text);
+        outline: none;
         box-sizing: border-box;
+      }
+      input[type="text"]:focus,
+      input[type="password"]:focus,
+      input[type="number"]:focus {
+        border-color: var(--ox-w-gold);
       }
       .row {
         display: flex;
@@ -75,43 +151,221 @@
       .row input {
         flex: 1;
       }
+      input[type="range"] {
+        flex: 1;
+        accent-color: var(--ox-w-gold);
+      }
+
+      /* ─── Buttons ─── */
       button {
-        font: inherit;
-        padding: 8px 14px;
-        background: var(--accent);
-        color: white;
-        border: 0;
-        border-radius: 4px;
+        font: 500 13.5px/1.4 var(--ox-font);
         cursor: pointer;
       }
-      button.secondary {
-        background: transparent;
-        color: var(--fg);
-        border: 1px solid var(--border);
+      .btn-primary {
+        padding: 10px 18px;
+        background: var(--ox-w-ink);
+        color: var(--ox-w-gold-bg);
+        border: 0;
+        border-radius: 8px;
+        font-weight: 600;
+        letter-spacing: 0.005em;
       }
-      button:disabled {
-        opacity: 0.5;
+      .btn-primary:hover {
+        background: #2a241c;
+      }
+      .btn-primary:disabled {
+        opacity: 0.6;
         cursor: default;
       }
-      #status {
-        margin-top: 8px;
-        min-height: 1.4em;
+      .btn-ghost {
+        padding: 10px 14px;
+        background: var(--ox-w-bg);
+        color: var(--ox-w-text);
+        border: 1px solid var(--ox-w-rule);
+        border-radius: 8px;
         font-size: 13px;
+        font-weight: 500;
+      }
+      .btn-ghost:hover {
+        background: var(--ox-w-bg-2);
+      }
+
+      /* ─── Status ─── */
+      #status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        min-height: 1.4em;
       }
       #status.ok {
-        color: var(--ok);
+        color: var(--ox-w-gold);
       }
       #status.err {
-        color: var(--err);
+        color: var(--ox-w-bad);
       }
-      .actions {
+      #status .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+        flex: 0 0 auto;
+      }
+
+      /* ─── Voice rows ─── */
+      .voices {
         display: flex;
-        gap: 8px;
+        flex-direction: column;
+      }
+      .voice-row {
+        display: flex;
         align-items: center;
-        margin-top: 28px;
+        gap: 14px;
+        padding: 12px 10px;
+        cursor: pointer;
+        border-top: 1px solid var(--ox-w-rule);
+        border-radius: 6px;
+        transition: background 0.1s;
+      }
+      .voice-row:first-child {
+        border-top: 0;
+      }
+      .voice-row:hover {
+        background: var(--ox-w-bg-2);
+      }
+      .voice-row.checked {
+        background: var(--ox-w-gold-hl);
+        border-top-color: transparent;
+      }
+      .voice-row.checked + .voice-row {
+        border-top-color: transparent;
+      }
+      .voice-row input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .radio-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid var(--ox-w-faint);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        transition: border-color 0.1s;
+      }
+      .voice-row.checked .radio-dot {
+        background: var(--ox-w-gold);
+        border-color: var(--ox-w-gold);
+      }
+      .voice-row.checked .radio-dot::after {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--ox-w-bg);
+      }
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--ox-w-bg-2);
+        border: 1px solid var(--ox-w-rule);
+        display: grid;
+        place-items: center;
+        font: 600 18px/1 var(--ox-font-jp);
+        color: var(--ox-w-text);
+        flex: 0 0 auto;
+      }
+      .voice-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .voice-line {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .voice-line .name-en {
+        font-size: 14.5px;
+        font-weight: 600;
+      }
+      .voice-line .name-jp {
+        font-family: var(--ox-font-jp);
+        font-size: 13px;
+        color: var(--ox-w-text-2);
+      }
+      .voice-line .gender {
+        font-size: 10.5px;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--ox-w-bg-2);
+        color: var(--ox-w-text-2);
+        border: 1px solid var(--ox-w-rule);
+      }
+      .voice-id {
+        font-size: 11px;
+        color: var(--ox-w-mute);
+        margin-top: 3px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .voice-preview {
+        background: transparent;
+        color: var(--ox-w-gold);
+        border: 1px solid var(--ox-w-rule);
+        padding: 6px 12px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        flex: 0 0 auto;
+      }
+      .voice-preview:hover {
+        background: var(--ox-w-gold-hl);
+      }
+      .voice-preview svg {
+        width: 11px;
+        height: 11px;
+      }
+      .voices-empty {
+        padding: 18px;
+        color: var(--ox-w-mute);
+        font-size: 13px;
+      }
+
+      /* ─── Playback grid ─── */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+      }
+      .speed-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      #speedValue {
+        min-width: 60px;
+        text-align: right;
+        font-size: 14px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ─── Footer ─── */
+      .footer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 32px;
+        padding-top: 22px;
+        border-top: 1px solid var(--ox-w-rule);
       }
       #saveMsg {
-        color: var(--ok);
+        color: var(--ox-w-gold);
         font-size: 13px;
         opacity: 0;
         transition: opacity 0.2s;
@@ -119,116 +373,95 @@
       #saveMsg.show {
         opacity: 1;
       }
-      #voices {
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        max-height: 280px;
-        overflow-y: auto;
-      }
-      .voice-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 10px;
-        border-bottom: 1px solid var(--border);
-        cursor: pointer;
-      }
-      .voice-row:last-child {
-        border-bottom: 0;
-      }
-      .voice-row:hover {
-        background: var(--row-hover, rgba(0, 0, 0, 0.04));
-      }
-      .voice-row input[type="radio"] {
-        margin: 0;
-      }
-      .voice-name {
-        flex: 1;
-      }
-      .voice-name .display {
-        font-weight: 600;
-      }
-      .voice-name .local {
-        margin-left: 6px;
-      }
-      .voice-name .meta {
-        color: var(--muted);
-        font-size: 12px;
-        margin-top: 2px;
-      }
-      .voice-row button.preview {
-        background: transparent;
-        color: var(--fg);
-        border: 1px solid var(--border);
-        padding: 4px 10px;
-        font-size: 13px;
-      }
-      @media (prefers-color-scheme: dark) {
-        .voice-row:hover {
-          background: rgba(255, 255, 255, 0.04);
-        }
+      .version {
+        margin-left: auto;
+        font-size: 11.5px;
+        color: var(--ox-w-mute);
       }
     </style>
   </head>
   <body>
-    <h1>Onyomi</h1>
-    <p class="subtitle">音読み — highlight Japanese on any page, hear it spoken.</p>
+    <main>
+      <header class="page">
+        <div class="ox-mark"><div class="ox-mark-inner">音</div></div>
+        <div class="title">
+          <h1>Onyomi</h1>
+          <div class="tagline">
+            <span class="jp">音読み</span> — hear any Japanese, spoken naturally
+          </div>
+        </div>
+        <a class="cache-link" id="cacheLink" href="cache.html">Open cache →</a>
+      </header>
 
-    <div class="field">
-      <label for="key">Azure Speech key</label>
-      <div class="row">
-        <input id="key" type="password" autocomplete="off" spellcheck="false" />
-        <button class="secondary" id="toggleKey" type="button">Show</button>
+      <section class="section">
+        <h2>Connection</h2>
+        <div class="subtitle">Azure Speech credentials, stored only on this device.</div>
+        <div class="fields">
+          <label>
+            <div class="field-label">Azure speech key</div>
+            <div class="row">
+              <input id="key" type="password" autocomplete="off" spellcheck="false" />
+              <button class="btn-ghost" id="toggleKey" type="button">Show</button>
+            </div>
+            <div class="hint">
+              Stored in <code>chrome.storage.local</code>. Never sent anywhere except Azure.
+            </div>
+          </label>
+
+          <label>
+            <div class="field-label">Region</div>
+            <input id="region" type="text" placeholder="uksouth" spellcheck="false" style="max-width: 260px" />
+            <div class="hint">
+              Must match your Speech resource — e.g. <code>uksouth</code>, <code>westeurope</code>,
+              <code>eastus</code>.
+            </div>
+          </label>
+
+          <div class="row" style="margin-top: 4px">
+            <button class="btn-primary" id="test" type="button">Test connection</button>
+            <div id="status"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Default voice</h2>
+        <div class="subtitle">
+          Onyomi plays this voice by default. The shuffle button picks a random voice for variety.
+        </div>
+        <div id="voices" class="voices">
+          <div class="voices-empty">Connect to Azure to load the voice list.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Playback</h2>
+        <div class="subtitle">How audio is rendered.</div>
+        <div class="grid-2">
+          <label>
+            <div class="field-label">Speed</div>
+            <div class="speed-row">
+              <input id="speed" type="range" min="0.6" max="1.4" step="0.05" value="1.0" />
+              <div id="speedValue">1.00×</div>
+            </div>
+            <div class="hint">0.8× gentle for new vocab · 1.2× for review</div>
+          </label>
+          <label>
+            <div class="field-label">Selection character cap</div>
+            <input id="charLimit" type="number" min="50" max="5000" step="50" value="500" />
+            <div class="hint">
+              Long selections need a confirm-click — guards against accidental whole-page selections.
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <div class="footer">
+        <button class="btn-primary" id="save" type="button">Save changes</button>
+        <span id="saveMsg">Saved ✓</span>
+        <span class="version" id="version">v0.1 · saved locally</span>
       </div>
-      <div class="hint">
-        Stored locally via <code>chrome.storage.local</code>. Never sent anywhere except Azure.
-      </div>
-    </div>
-
-    <div class="field">
-      <label for="region">Azure region</label>
-      <input id="region" type="text" placeholder="uksouth" spellcheck="false" />
-      <div class="hint">
-        Must match the region of your Azure Speech resource. e.g. <code>uksouth</code>,
-        <code>westeurope</code>, <code>eastus</code>.
-      </div>
-    </div>
-
-    <div class="field">
-      <button id="test" type="button">Test connection</button>
-      <div id="status"></div>
-    </div>
-
-    <div class="field">
-      <label>Default voice</label>
-      <div id="voices">
-        <div class="hint">Connect to Azure first to load the voice list.</div>
-      </div>
-    </div>
-
-    <div class="field">
-      <label for="speed">Playback speed</label>
-      <input id="speed" type="number" min="0.5" max="1.5" step="0.1" value="1.0" />
-      <div class="hint">1.0 is native pace. 0.8 is gentle for new vocab; 1.2 for review.</div>
-    </div>
-
-    <div class="field">
-      <label for="charLimit">Selection character cap</label>
-      <input id="charLimit" type="number" min="50" max="5000" step="50" value="500" />
-      <div class="hint">
-        Selections above this length require a confirm click before playing — guards against
-        accidental whole-page selections.
-      </div>
-    </div>
-
-    <div class="actions">
-      <button id="save" type="button">Save</button>
-      <span id="saveMsg">Saved ✓</span>
-    </div>
-
-    <div class="field" style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 16px">
-      <a id="cacheLink" href="cache.html" target="_blank">Open cache inspector →</a>
-    </div>
+    </main>
 
     <script type="module" src="options.js"></script>
   </body>

@@ -6,19 +6,40 @@ const DEFAULTS = {
   ttsCredentials: { key: "", region: "uksouth" },
   defaultVoice: FALLBACK_VOICE,
   voices: [],
+  lastTestedAt: 0,
   playbackSpeed: 1.0,
   selectionCharLimit: 500,
 };
 
 const $ = (id) => document.getElementById(id);
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function relativeTime(ts) {
+  if (!ts) return "";
+  const diff = (Date.now() - ts) / 1000;
+  if (diff < 30) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`;
+  return `${Math.floor(diff / 86400)} d ago`;
+}
+
 async function loadSettings() {
   const stored = await chrome.storage.local.get(DEFAULTS);
   $("key").value = stored.ttsCredentials.key || "";
   $("region").value = stored.ttsCredentials.region || DEFAULTS.ttsCredentials.region;
   $("speed").value = stored.playbackSpeed;
+  $("speedValue").textContent = `${Number(stored.playbackSpeed).toFixed(2)}×`;
   $("charLimit").value = stored.selectionCharLimit;
   renderVoices(stored.voices, stored.defaultVoice);
+  renderConnectedStatus(stored.voices, stored.lastTestedAt);
+  $("version").textContent = `v${chrome.runtime.getManifest().version} · saved locally`;
 }
 
 async function saveSettings() {
@@ -32,10 +53,6 @@ async function saveSettings() {
     playbackSpeed: parseFloat($("speed").value) || DEFAULTS.playbackSpeed,
     selectionCharLimit: parseInt($("charLimit").value, 10) || DEFAULTS.selectionCharLimit,
   });
-  flashSaved();
-}
-
-function flashSaved() {
   const msg = $("saveMsg");
   msg.classList.add("show");
   setTimeout(() => msg.classList.remove("show"), 1500);
@@ -43,40 +60,49 @@ function flashSaved() {
 
 function setStatus(text, cls) {
   const el = $("status");
-  el.textContent = text;
   el.className = cls || "";
+  if (text) {
+    el.innerHTML = `<span class="dot"></span>${escapeHtml(text)}`;
+  } else {
+    el.textContent = "";
+  }
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function renderConnectedStatus(voices, lastTestedAt) {
+  if (!voices?.length || !lastTestedAt) return;
+  setStatus(`Connected — ${voices.length} voices, ${relativeTime(lastTestedAt)}`, "ok");
 }
 
 function renderVoices(voices, defaultVoiceId) {
   const container = $("voices");
   if (!voices?.length) {
     container.innerHTML =
-      '<div class="hint" style="padding: 12px">Connect to Azure first to load the voice list.</div>';
+      '<div class="voices-empty">Connect to Azure to load the voice list.</div>';
     return;
   }
   container.innerHTML = voices
-    .map(
-      (v) => `
-      <label class="voice-row">
-        <input type="radio" name="voice" value="${escapeHtml(v.id)}" ${
-          v.id === defaultVoiceId ? "checked" : ""
-        } />
-        <div class="voice-name">
-          <span class="display">${escapeHtml(v.displayName)}</span>
-          <span class="local">${escapeHtml(v.localName || "")}</span>
-          <div class="meta">${escapeHtml(v.gender || "")} · ${escapeHtml(v.id)}</div>
-        </div>
-        <button type="button" class="preview" data-voice="${escapeHtml(v.id)}">▶ preview</button>
-      </label>`
-    )
+    .map((v) => {
+      const avatar = (v.localName || v.displayName || "?").slice(0, 1);
+      const checked = v.id === defaultVoiceId;
+      return `
+        <label class="voice-row${checked ? " checked" : ""}" data-voice="${escapeHtml(v.id)}">
+          <input type="radio" name="voice" value="${escapeHtml(v.id)}"${checked ? " checked" : ""} />
+          <span class="radio-dot"></span>
+          <span class="avatar">${escapeHtml(avatar)}</span>
+          <div class="voice-info">
+            <div class="voice-line">
+              <span class="name-en">${escapeHtml(v.displayName || v.id)}</span>
+              <span class="name-jp">${escapeHtml(v.localName || "")}</span>
+              <span class="gender">${escapeHtml(v.gender || "")}</span>
+            </div>
+            <div class="voice-id">${escapeHtml(v.id)}</div>
+          </div>
+          <button type="button" class="voice-preview" data-voice="${escapeHtml(v.id)}">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 3.2v9.6a.6.6 0 0 0 .92.5l7.6-4.8a.6.6 0 0 0 0-1l-7.6-4.8a.6.6 0 0 0-.92.5z"/></svg>
+            Preview
+          </button>
+        </label>`;
+    })
     .join("");
 }
 
@@ -99,7 +125,7 @@ async function previewVoice(voiceId) {
 }
 
 async function testConnection() {
-  setStatus("Testing…", "");
+  setStatus("Testing…");
   $("test").disabled = true;
   try {
     const credentials = {
@@ -108,21 +134,19 @@ async function testConnection() {
     };
     const result = await adapter.testConnection(credentials);
     if (!result.ok) {
-      setStatus(`❌ ${result.reason}`, "err");
+      setStatus(result.reason, "err");
       return;
     }
-    setStatus(
-      `✅ Connected. ${result.jaVoiceCount} Japanese voices available (${result.totalVoices} total). Loading…`,
-      "ok"
-    );
+    setStatus(`Loading ${result.jaVoiceCount} voices…`, "ok");
     const voices = await adapter.listVoices(credentials);
     const { defaultVoice } = await chrome.storage.local.get({ defaultVoice: FALLBACK_VOICE });
     const newDefault = voices.some((v) => v.id === defaultVoice) ? defaultVoice : voices[0].id;
-    await chrome.storage.local.set({ voices, defaultVoice: newDefault });
+    const now = Date.now();
+    await chrome.storage.local.set({ voices, defaultVoice: newDefault, lastTestedAt: now });
     renderVoices(voices, newDefault);
-    setStatus(`✅ Connected. ${voices.length} Japanese voices loaded.`, "ok");
+    renderConnectedStatus(voices, now);
   } catch (e) {
-    setStatus(`❌ ${e.message}`, "err");
+    setStatus(e.message, "err");
   } finally {
     $("test").disabled = false;
   }
@@ -143,12 +167,25 @@ function toggleKeyVisibility() {
 $("test").addEventListener("click", testConnection);
 $("save").addEventListener("click", saveSettings);
 $("toggleKey").addEventListener("click", toggleKeyVisibility);
+$("speed").addEventListener("input", (e) => {
+  $("speedValue").textContent = `${Number(e.target.value).toFixed(2)}×`;
+});
 
 $("voices").addEventListener("click", (e) => {
-  const btn = e.target.closest("button.preview");
-  if (!btn) return;
-  e.preventDefault();
-  previewVoice(btn.dataset.voice);
+  const previewBtn = e.target.closest(".voice-preview");
+  if (previewBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    previewVoice(previewBtn.dataset.voice);
+    return;
+  }
+  // Let the radio change happen, then update the row classes
+  setTimeout(() => {
+    const checked = document.querySelector('input[name="voice"]:checked');
+    document.querySelectorAll(".voice-row").forEach((row) => {
+      row.classList.toggle("checked", row.dataset.voice === checked?.value);
+    });
+  }, 0);
 });
 
 loadSettings();
